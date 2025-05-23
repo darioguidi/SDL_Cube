@@ -3,10 +3,10 @@
 #include <math.h>
 #include <SDL2/SDL.h>
 
-#define SCREEN_WIDTH 600
-#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH 500
+#define SCREEN_HEIGHT 500
 Uint32 COLOR_WHITE = 0xffffffff;
-#define SIZE_POINT 5
+#define SIZE_POINT 3
 #define CORDINATE_SYSTEM_OFFSET_X SCREEN_WIDTH/2
 #define CORDINATE_SYSTEM_OFFSET_Y SCREEN_HEIGHT/2
 
@@ -18,6 +18,17 @@ struct Point {
 
 double phi = 5;
 
+void apply_rotation(double rotation_matrix[3][3], int *x,int *y,int *z)
+{
+    int new_x = rotation_matrix[0][0]*(*x) + rotation_matrix[0][1]*(*y) + rotation_matrix[0][2]*(*z);
+    int new_y = rotation_matrix[1][0]*(*x) + rotation_matrix[1][1]*(*y) + rotation_matrix[1][2]*(*z);
+    int new_z = rotation_matrix[2][0]*(*x) + rotation_matrix[2][1]*(*y) + rotation_matrix[2][2]*(*z);
+
+    *x = new_x;
+    *y = new_y;
+    *z = new_z;
+}
+
 void draw_point(SDL_Renderer *renderer, int x, int y)
 {
     SDL_Rect rect = (SDL_Rect) {x,y,SIZE_POINT,SIZE_POINT};
@@ -27,22 +38,37 @@ void draw_point(SDL_Renderer *renderer, int x, int y)
 
 int draw_point_3d(SDL_Renderer *renderer, struct Point point)
 {
-    double rotation_matrix[3][3] = {
+
+    int x = point.x;
+    int y = point.y;
+    int z = point.z;
+
+    double rotation_y[3][3] = {
         {cos(phi), 0, sin(phi)},
         {0,        1, 0       },
         {-sin(phi),0, cos(phi)}
     };
+    
+    // Rotazione sull’asse X
+    double rotation_x[3][3] = {
+        {1, 0,         0        },
+        {0, cos(phi), -sin(phi)},
+        {0, sin(phi),  cos(phi)}
+    };
+    
+    // Rotazione sull’asse Z
+    double rotation_z[3][3] = {
+        {cos(phi), -sin(phi), 0},
+        {sin(phi),  cos(phi), 0},
+        {0,         0,        1}
+    };
+    
+    apply_rotation(rotation_z, &x, &y, &z);
+    apply_rotation(rotation_y, &x, &y, &z);
+    apply_rotation(rotation_x, &x, &y, &z);
 
-    double x = point.x;
-    double y = point.y;
-    double z = point.z;
-
-    double x_rot = rotation_matrix[0][0]*x + rotation_matrix[0][1]*y + rotation_matrix[0][2]*z;
-    double y_rot = rotation_matrix[1][0]*x + rotation_matrix[1][1]*y + rotation_matrix[1][2]*z;
-    //double z_rot = rotation_matrix[2][0]*x + rotation_matrix[2][1]*y + rotation_matrix[2][2]*z;
-
-    int x_2d = (int)x_rot + CORDINATE_SYSTEM_OFFSET_X;
-    int y_2d = (int)y_rot + CORDINATE_SYSTEM_OFFSET_Y;
+    int x_2d = (int)x + CORDINATE_SYSTEM_OFFSET_X;
+    int y_2d = (int)y + CORDINATE_SYSTEM_OFFSET_Y;
 
     draw_point(renderer, x_2d, y_2d);
     return 1;
@@ -58,49 +84,43 @@ int draw_point_3d_array(SDL_Renderer *renderer, struct Point *point, int length)
 struct Point* generate_cube(int number_points)
 {
     int points_per_edge = number_points / 12;
-    int total_point = points_per_edge*12;
+    int total_point = points_per_edge * 12;
     struct Point *points = malloc(total_point * sizeof(struct Point));
     int index = 0;
 
+    int s = points_per_edge;
+
+    // 8 vertici del cubo centrato sull'origine
     struct Point vertices[8] = {
-        {0, 0, 0}, {points_per_edge, 0, 0}, {points_per_edge, -points_per_edge, 0}, {0, points_per_edge, 0},
-        {0, 0, -points_per_edge}, {points_per_edge, 0, points_per_edge}, {points_per_edge, -points_per_edge, points_per_edge}, {0, -points_per_edge, -points_per_edge}
+        {-s/2, -s/2, -s/2}, // 0
+        { s/2, -s/2, -s/2}, // 1
+        { s/2,  s/2, -s/2}, // 2
+        {-s/2,  s/2, -s/2}, // 3
+        {-s/2, -s/2,  s/2}, // 4
+        { s/2, -s/2,  s/2}, // 5
+        { s/2,  s/2,  s/2}, // 6
+        {-s/2,  s/2,  s/2}  // 7
     };
 
-    for(int i=0;i<points_per_edge;i++){
-        points[index] = (struct Point){vertices[0].x+i,vertices[0].y,vertices[0].z};
-        index++;
-        points[index] = (struct Point){vertices[0].x,vertices[0].y-i,vertices[0].z};
-        index++;
-        points[index] = (struct Point){vertices[0].x,vertices[0].y,vertices[0].z-i};
-        index++;
-    }
+    // 12 spigoli: ogni coppia di indici rappresenta un segmento
+    int edges[12][2] = {
+        {0, 1}, {1, 2}, {2, 3}, {3, 0}, // base
+        {4, 5}, {5, 6}, {6, 7}, {7, 4}, // top
+        {0, 4}, {1, 5}, {2, 6}, {3, 7}  // verticali
+    };
 
-    for(int i=0;i<points_per_edge;i++){
-        points[index] = (struct Point){vertices[2].x-i,vertices[2].y,vertices[2].z};
-        index++;
-        points[index] = (struct Point){vertices[2].x,vertices[2].y+i,vertices[2].z};
-        index++;
-        points[index] = (struct Point){vertices[2].x,vertices[2].y,vertices[2].z-i};
-        index++;
-    }
+    for (int e = 0; e < 12; e++) {
+        struct Point p1 = vertices[edges[e][0]];
+        struct Point p2 = vertices[edges[e][1]];
 
-    for(int i=0;i<points_per_edge;i++){
-        points[index] = (struct Point){vertices[5].x-i,vertices[5].y,vertices[5].z};
-        index++;
-        points[index] = (struct Point){vertices[5].x,vertices[5].y-i,vertices[5].z};
-        index++;
-        points[index] = (struct Point){vertices[5].x,vertices[5].y,vertices[5].z+i};
-        index++;
-    }
-
-    for(int i=0;i<points_per_edge;i++){
-        points[index] = (struct Point){vertices[7].x+i,vertices[7].y,vertices[7].z};
-        index++;
-        points[index] = (struct Point){vertices[7].x,vertices[7].y+i,vertices[7].z};
-        index++;
-        points[index] = (struct Point){vertices[7].x,vertices[7].y,vertices[7].z+i};
-        index++;
+        for (int i = 0; i < points_per_edge; i++) {
+            float t = (float)i / points_per_edge;
+            points[index++] = (struct Point){
+                p1.x + (int)((p2.x - p1.x) * t),
+                p1.y + (int)((p2.y - p1.y) * t),
+                p1.z + (int)((p2.z - p1.z) * t)
+            };
+        }
     }
 
     return points;
@@ -160,6 +180,8 @@ int main(void)
     
         draw_point_3d_array(renderer, cube_points, number_points);
         SDL_RenderPresent(renderer);
+
+        printf("%f \n",phi);
     
         phi += 0.05;
         SDL_Delay(16);

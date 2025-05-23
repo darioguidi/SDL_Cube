@@ -1,0 +1,5 @@
+
+    struct Point vertices[8] = {
+        {0, 0, 0}, {points_per_edge, 0, 0}, {points_per_edge, -points_per_edge, 0}, {0, points_per_edge, 0},
+        {0, 0, -points_per_edge}, {points_per_edge, 0, -points_per_edge}, {points_per_edge, -points_per_edge, points_per_edge}, {0, -points_per_edge, -points_per_edge}
+    };
