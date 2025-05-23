@@ -18,13 +18,11 @@ struct Point {
 
 double phi = 5;
 
-int draw_point(SDL_Renderer *renderer, int x, int y)
+void draw_point(SDL_Renderer *renderer, int x, int y)
 {
     SDL_Rect rect = (SDL_Rect) {x,y,SIZE_POINT,SIZE_POINT};
     SDL_SetRenderDrawColor(renderer,255,255,255,255);
     SDL_RenderFillRect(renderer,&rect);
-    
-    return 1;
 }
 
 int draw_point_3d(SDL_Renderer *renderer, struct Point point)
@@ -66,7 +64,7 @@ struct Point* generate_cube(int number_points)
 
     struct Point vertices[8] = {
         {0, 0, 0}, {points_per_edge, 0, 0}, {points_per_edge, -points_per_edge, 0}, {0, points_per_edge, 0},
-        {0, 0, points_per_edge}, {points_per_edge, 0, points_per_edge}, {points_per_edge, points_per_edge, points_per_edge}, {0, -points_per_edge, -points_per_edge}
+        {0, 0, -points_per_edge}, {points_per_edge, 0, points_per_edge}, {points_per_edge, -points_per_edge, points_per_edge}, {0, -points_per_edge, -points_per_edge}
     };
 
     for(int i=0;i<points_per_edge;i++){
@@ -151,17 +149,19 @@ int main(void)
 
     SDL_Event event;
     int quit = 0;
-    while(!quit){
-        while(SDL_PollEvent(&event)){
-            if (event.type == SDL_QUIT){
-                quit = 1;
-            }
-
-            draw_point_3d_array(renderer, cube_points, number_points);
-            SDL_RenderPresent(renderer);
-
-            phi+=0.5;
+    
+    while (!quit) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) quit = 1;
         }
+    
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+    
+        draw_point_3d_array(renderer, cube_points, number_points);
+        SDL_RenderPresent(renderer);
+    
+        phi += 0.05;
         SDL_Delay(16);
     }
 
