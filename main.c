@@ -41,9 +41,21 @@ int draw_point_3d_array(SDL_Renderer *renderer, struct Point *point, int length)
 struct Point* generate_cube(int number_points){
     struct Point *points = malloc(number_points * sizeof(struct Point));
 
-    for(int i=0;i<number_points;i++){
-        *(points+i) = (struct Point){i,i,i};
-    }
+    int points_per_edge = number_points/12;
+    int index=0;
+
+    struct Point vertices[8] = {
+        {0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0},
+        {0, 0, 1}, {1, 0, 1}, {1, 1, 1}, {0, 1, 1}
+    };
+
+    int edge_pairs[12][2] = {
+        {0,1}, {1,2}, {2,3}, {3,0},
+        {4,5}, {5,6}, {6,7}, {7,4},
+        {0,4}, {1,5}, {2,6}, {3,7}
+    };
+
+
 
     return points;
 }
