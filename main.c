@@ -5,7 +5,7 @@
 #define SCREEN_WIDTH 600
 #define SCREEN_HEIGHT 600
 Uint32 COLOR_WHITE = 0xffffffff;
-#define SIZE_POINT 2
+#define SIZE_POINT 10
 #define CORDINATE_SYSTEM_OFFSET_X SCREEN_WIDTH/2
 #define CORDINATE_SYSTEM_OFFSET_Y SCREEN_HEIGHT/2
 
@@ -25,9 +25,12 @@ int draw_point(SDL_Renderer *renderer, int x, int y)
 
 int draw_point_3d(SDL_Renderer *renderer, struct Point point)
 {
-    int x_2d =  point.x + CORDINATE_SYSTEM_OFFSET_X;
-    int y_2d = point.y + CORDINATE_SYSTEM_OFFSET_Y;
-    draw_point(renderer,x_2d,y_2d);
+    int scale = 100;  // scala per ingrandire il cubo
+
+    int x_2d = point.x * scale + CORDINATE_SYSTEM_OFFSET_X;
+    int y_2d = point.y * scale + CORDINATE_SYSTEM_OFFSET_Y;
+
+    draw_point(renderer, x_2d, y_2d);
     return 1;
 }
 
@@ -38,24 +41,35 @@ int draw_point_3d_array(SDL_Renderer *renderer, struct Point *point, int length)
     return 1;
 }
 
-struct Point* generate_cube(int number_points){
+struct Point* generate_cube(int number_points)
+{
     struct Point *points = malloc(number_points * sizeof(struct Point));
-
-    int points_per_edge = number_points/12;
-    int index=0;
+    int points_per_edge = number_points / 12;
+    int index = 0;
 
     struct Point vertices[8] = {
         {0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0},
         {0, 0, 1}, {1, 0, 1}, {1, 1, 1}, {0, 1, 1}
     };
 
-    int edge_pairs[12][2] = {
-        {0,1}, {1,2}, {2,3}, {3,0},
-        {4,5}, {5,6}, {6,7}, {7,4},
-        {0,4}, {1,5}, {2,6}, {3,7}
+    // Definizione degli spigoli come coppie di vertici
+    int edges[12][2] = {
+        {0,1}, {1,2}, {2,3}, {3,0},  // spigoli base inferiore
+        {4,5}, {5,6}, {6,7}, {7,4},  // spigoli base superiore
+        {0,4}, {1,5}, {2,6}, {3,7}   // spigoli verticali
     };
 
-
+    for (int e = 0; e < 12; e++) {
+        struct Point start = vertices[edges[e][0]];
+        struct Point end = vertices[edges[e][1]];
+        for (int i = 0; i < points_per_edge; i++) {
+            float t = (float)i / (points_per_edge - 1);
+            points[index].x = start.x + t * (end.x - start.x);
+            points[index].y = start.y + t * (end.y - start.y);
+            points[index].z = start.z + t * (end.z - start.z);
+            index++;
+        }
+    }
 
     return points;
 }
