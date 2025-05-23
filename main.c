@@ -5,7 +5,7 @@
 #define SCREEN_WIDTH 600
 #define SCREEN_HEIGHT 600
 Uint32 COLOR_WHITE = 0xffffffff;
-#define SIZE_POINT 10
+#define SIZE_POINT 2
 #define CORDINATE_SYSTEM_OFFSET_X SCREEN_WIDTH/2
 #define CORDINATE_SYSTEM_OFFSET_Y SCREEN_HEIGHT/2
 
@@ -28,6 +28,13 @@ int draw_point_3d(SDL_Renderer *renderer, struct Point point)
     int x_2d =  point.x + CORDINATE_SYSTEM_OFFSET_X;
     int y_2d = point.y + CORDINATE_SYSTEM_OFFSET_Y;
     draw_point(renderer,x_2d,y_2d);
+    return 1;
+}
+
+int draw_point_3d_array(SDL_Renderer *renderer, struct Point *point, int length){
+    for(int i=0;i<length;i++){
+        draw_point_3d(renderer, *(point+i));
+    }
     return 1;
 }
 
@@ -85,6 +92,8 @@ int main(void)
 
     draw_point_3d(renderer,point);
 
+    draw_point_3d_array(renderer, cube_points, number_points);
+
     SDL_RenderPresent(renderer);
 
     SDL_Event event;
@@ -98,7 +107,7 @@ int main(void)
         SDL_Delay(16);
     }
 
-
+    free(cube_points);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
