@@ -1,19 +1,17 @@
-# Compilatore
 CC = gcc
-
-CFLAGS = -Wall -std=c99
-
-# Librerie
-LIBS = -lSDL2 -lm
+CFLAGS = -I/mingw64/include/SDL2 -D_REENTRANT
+LIBS = -L/mingw64/lib -lmingw32 -lSDL2main -lSDL2 -mwindows
 
 TARGET = cube
 SRC = main.c
 
 $(TARGET): $(SRC)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRC) $(LIBS)
+	@echo "Compiling..."
+	$(CC) $(CFLAGS) $(SRC) -o $(TARGET).exe $(LIBS)
+	@echo "Done!"
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET).exe
 
 run: $(TARGET)
-	./$(TARGET)
+	./$(TARGET).exe

@@ -127,7 +127,7 @@ struct Point* generate_cube(int number_points)
 }
 
 
-int main(void) 
+int main(int argc, char* argv[]) 
 {
 
     int number_points;
