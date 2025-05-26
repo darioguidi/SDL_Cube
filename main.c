@@ -134,6 +134,8 @@ int main(int argc, char* argv[])
     printf("Inserire il numero di punti necessari per rappresentare il nostro cubo\n");
     scanf("%d", &number_points);
 
+    number_points=1200;
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Errore inizializzazione SDL: %s\n", SDL_GetError());
         return 1;
